@@ -241,7 +241,7 @@ with st.sidebar:
         st.info(f"Logged in as {st.session_state.user['name']} ({st.session_state.user['role']})")
         if st.button("Logout"):
             st.session_state.user = None
-            st.experimental_rerun()
+            st.experimental_set_query_params(_refresh=1)
     else:
         tab = st.radio("Have an account?", ("Login", "Register"))
         if tab == "Login":
@@ -252,7 +252,7 @@ with st.sidebar:
                 if user:
                     st.session_state.user = user
                     st.success("Logged in")
-                    st.experimental_rerun()
+                    st.experimental_set_query_params(_refresh=1)
                 else:
                     st.error("Invalid credentials")
         else:
@@ -314,7 +314,7 @@ elif page == "Catalog":
                                 ok, msg = issue_book(st.session_state.user["id"], b["id"])
                                 if ok:
                                     st.success(msg)
-                                    st.experimental_rerun()
+                                    st.experimental_set_query_params(_refresh=1)
                                 else:
                                     st.error(msg)
                         else:
@@ -343,7 +343,7 @@ elif page == "My Loans":
                             ok, msg = return_book(ln["id"])
                             if ok:
                                 st.success(msg)
-                                st.experimental_rerun()
+                                st.experimental_set_query_params(_refresh=1)
                             else:
                                 st.error(msg)
                     if status == "returned":
@@ -397,7 +397,7 @@ elif page == "Manage Books":
                 if st.button("Delete book"):
                     delete_book(b["id"])
                     st.success("Deleted.")
-                    st.experimental_rerun()
+                    st.experimental_set_query_params(_refresh=1)
 
         else:
             st.info("Bulk upload via CSV: file should have columns: title,author,isbn,copies_total,year,category")
