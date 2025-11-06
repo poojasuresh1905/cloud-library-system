@@ -95,14 +95,44 @@ def register_user(name, email, password, role="patron"):
         conn.close()
 
 def authenticate(email, password):
+    """
+    Authenticate a user by email and password.
+    Supports both:
+      - users table with column 'password_hash' (hashed password)
+      - users table with column 'password' (plaintext seed)
+    """
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("SELECT * FROM users WHERE email = ?", (email.lower(),))
     row = cur.fetchone()
     conn.close()
-    if row and row["password_hash"] == hash_password(password):
-        return dict(row)
+    if not row:
+        return None
+
+    # row is sqlite3.Row so we can check column names
+    cols = row.keys()
+
+    # Case 1: stored hashed password (preferred)
+    if "password_hash" in cols:
+        stored = row["password_hash"]
+        if stored == hash_password(password):
+            return dict(row)
+        return None
+
+    # Case 2: legacy plaintext 'password' column (seeded)
+    if "password" in cols:
+        stored = row["password"]
+        # if seed used plaintext, accept direct match
+        if stored == password:
+            return dict(row)
+        # if stored looks like a sha256 hex (length 64) compare hashes
+        if len(stored) == 64 and stored == hashlib.sha256(password.encode()).hexdigest():
+            return dict(row)
+        return None
+
+    # No usable password column found
     return None
+
 
 # ---------- book operations ----------
 def add_book(title, author, isbn, copies, year, category):
